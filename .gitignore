@@ -1,4 +1,8 @@
-.env
 .vscode/
 __pycache__/
 .idea/
+airflow-data/*
+genres/*
+output_folder/*
+temp_folder/*
+logs/*
