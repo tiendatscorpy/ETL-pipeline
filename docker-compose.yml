@@ -53,6 +53,8 @@ x-airflow-common:
     - ./airflow-data/creds:/opt/airflow/creds
     - ./dags:/opt/airflow/dags
     - ./sparkFiles:/opt/airflow/sparkFiles
+    - ./genres:/opt/airflow/genres
+    - ./output_folder:/opt/airflow/output_folder
     - ./airflow-data/logs:/opt/airflow/logs
     - ./airflow-data/plugins:/opt/airflow/plugins
     - ./airflow-data/airflow.cfg:/opt/airlfow/airflow.cfg
