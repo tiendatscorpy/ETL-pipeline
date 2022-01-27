@@ -4,6 +4,7 @@ USER root
 # Install OpenJDK-8
 RUN apt-get update && \
     apt-get install -y openjdk-11-jre-headless && \
+    apt-get install -yqq libsndfile1 libsndfile1-dev && \
     apt-get clean
 
 USER airflow
