@@ -53,8 +53,9 @@ x-airflow-common:
     - ./airflow-data/creds:/opt/airflow/creds
     - ./dags:/opt/airflow/dags
     - ./sparkFiles:/opt/airflow/sparkFiles
-    - ./genres:/opt/airflow/genres
-    - ./output_folder:/opt/airflow/output_folder
+    - input_folder:/opt/airflow/input_folder
+    - output_folder:/opt/airflow/output_folder
+    - ./temp_folder:/opt/airflow/temp_folder
     - ./airflow-data/logs:/opt/airflow/logs
     - ./airflow-data/plugins:/opt/airflow/plugins
     - ./airflow-data/airflow.cfg:/opt/airlfow/airflow.cfg
@@ -110,3 +111,7 @@ services:
 
 volumes:
   postgres-db-volume:
+  input_folder:
+    external: true
+  output_folder:
+    external: true
