@@ -200,7 +200,7 @@ Dummy task used as the end of the pipeline
 
 If you want to make changes to any of the configuration files [docker-compose.yml](https://github.com/renatootescu/ETL-pipeline/blob/main/docker-compose.yml), [Dockerfile](https://github.com/renatootescu/ETL-pipeline/blob/main/Dockerfile), [requirements.txt](https://github.com/renatootescu/ETL-pipeline/blob/main/requirements.txt) you will have to shut down the Airflow instance with:
 
-    docker-compose down
+    docker-compose down --volumes --remove-orphans
     
 This command will shut down and delete any containers created/used by Airflow.
 
