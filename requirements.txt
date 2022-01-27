@@ -2,3 +2,5 @@ pymongo
 boto3
 pyspark
 psycopg2-binary
+librosa
+sklearn
