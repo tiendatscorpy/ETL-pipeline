@@ -4,3 +4,4 @@ pyspark
 psycopg2-binary
 librosa
 sklearn
+numpy
