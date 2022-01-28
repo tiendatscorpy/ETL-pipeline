@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 
-input_path="$1"
-output_path="$2"
-if [ ! -d $input_path ]; then
-    echo "Directory $input_path not exist"
+if [ -z "$1" ] || [ -z "$2" ]
+  then
+    echo "Missing arguments"
     exit 1
 fi
 
-if [ ! -d $output_path ]; then
-    echo "Directory $output_path not exist"
+input_path="$1"
+output_path="$2"
+if [ ! -d $input_path ] || [ ! -d $output_path ]
+then
+    echo "Directory not exist"
     exit 1
 fi
 
