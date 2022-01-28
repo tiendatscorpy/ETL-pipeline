@@ -6,3 +6,4 @@ genres/*
 output_folder/*
 temp_folder/*
 logs/*
+.DS_Store
