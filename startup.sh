@@ -8,9 +8,16 @@ fi
 
 input_path="$1"
 output_path="$2"
+
 if [ ! -d $input_path ] || [ ! -d $output_path ]
-then
+  then
     echo "Directory not exist"
+    exit 1
+fi
+
+if (! docker stats --no-stream )
+  then
+    echo "Docker daemon is not runnning"
     exit 1
 fi
 
