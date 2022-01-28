@@ -52,7 +52,6 @@ x-airflow-common:
   volumes:
     - ./airflow-data/creds:/opt/airflow/creds
     - ./dags:/opt/airflow/dags
-    - ./sparkFiles:/opt/airflow/sparkFiles
     - input_folder:/opt/airflow/input_folder
     - output_folder:/opt/airflow/output_folder
     - ./temp_folder:/opt/airflow/temp_folder
