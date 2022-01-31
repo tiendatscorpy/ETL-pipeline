@@ -32,7 +32,7 @@ with DAG(
     schedule_interval=None,
     default_args=default_args,
     catchup=False,
-    is_paused_upon_creation=False
+    is_paused_upon_creation=False,
 ) as dag:
 
     t1 = BashOperator(
@@ -51,7 +51,7 @@ with DAG(
         task_id=f"extract_features",
         python_callable=extract_features,
         op_kwargs=t2_kwargs,
-        dag=dag
+        dag=dag,
     )
 
     t3_kwargs = {
@@ -63,7 +63,7 @@ with DAG(
         task_id=f"scale_features",
         python_callable=scale_features,
         op_kwargs=t3_kwargs,
-        dag=dag
+        dag=dag,
     )
 
     t4 = BashOperator(

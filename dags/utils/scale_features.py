@@ -15,7 +15,7 @@ def scale_features(input_folder: str, output_folder: str, op_conf: str, **kwargs
     output_folder: folder to store output numpy files
     """
     optional_params = eval(op_conf)
-    
+
     LOGGER.info("kwargs ", optional_params)
 
     for genre in list(os.listdir(input_folder)):
