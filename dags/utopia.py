@@ -9,7 +9,7 @@ from airflow.operators.bash import BashOperator
 
 from utils.extract_features import extract_features
 from utils.scale_features import scale_features
-import os
+import json
 
 default_args = {
     "owner": "dylan.nguyen",
@@ -33,23 +33,36 @@ with DAG(
     default_args=default_args,
     catchup=False,
 ) as dag:
+
     t1 = BashOperator(
         task_id="clean_up_temp_and_output",
         bash_command=f"rm -rfv {TEMP_FOLDER}/* && rm -rfv {OUTPUT_FOLDER}/*",
     )
 
+    op_conf = "{{ dag_run.conf }}"
+
+    t2_kwargs = {
+        "input_folder": INPUT_FOLDER,
+        "output_folder": TEMP_FOLDER,
+        "op_conf": op_conf,
+    }
     t2 = PythonOperator(
         task_id=f"extract_features",
         python_callable=extract_features,
-        op_kwargs={"input_folder": INPUT_FOLDER, "output_folder": TEMP_FOLDER},
-        dag=dag,
+        op_kwargs=t2_kwargs,
+        dag=dag
     )
 
+    t3_kwargs = {
+        "input_folder": TEMP_FOLDER,
+        "output_folder": OUTPUT_FOLDER,
+        "op_conf": op_conf,
+    }
     t3 = PythonOperator(
         task_id=f"scale_features",
         python_callable=scale_features,
-        op_kwargs={"input_folder": TEMP_FOLDER, "output_folder": OUTPUT_FOLDER},
-        dag=dag,
+        op_kwargs=t3_kwargs,
+        dag=dag
     )
 
     t4 = BashOperator(

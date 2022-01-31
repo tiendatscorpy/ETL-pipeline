@@ -1,4 +1,6 @@
+import json
 import os, errno
+from typing import Dict
 import numpy as np
 import os
 from sklearn.preprocessing import scale, minmax_scale
@@ -7,12 +9,15 @@ import logging
 LOGGER = logging.getLogger(__name__)
 
 
-def scale_features(input_folder: str, output_folder: str, **kwargs):
+def scale_features(input_folder: str, output_folder: str, op_conf: str, **kwargs):
     """
     input_folder: folder which contains input audio files
     output_folder: folder to store output numpy files
-    num_bands: number of bands (Mels) for (Mel-)Spectrogram extractor
     """
+    optional_params = eval(op_conf)
+    
+    LOGGER.info("kwargs ", optional_params)
+
     for genre in list(os.listdir(input_folder)):
         if os.path.isdir(f"{input_folder}/{genre}"):
             genre_input_folder = f"{input_folder}/{genre}/"
@@ -29,7 +34,9 @@ def scale_features(input_folder: str, output_folder: str, **kwargs):
                 if os.path.isfile(f"{input_file_abs_path}") and file_name.endswith(
                     ".npy"
                 ):
-                    LOGGER.info(f"scale_features.task >>> INFO current file: {file_name}")
+                    LOGGER.info(
+                        f"scale_features.task >>> INFO current file: {file_name}"
+                    )
                     file_name_wo_ex = file_name[:-4]
                     # load np array
                     y = np.load(f"{input_file_abs_path}")
