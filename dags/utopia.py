@@ -32,6 +32,7 @@ with DAG(
     schedule_interval=None,
     default_args=default_args,
     catchup=False,
+    is_paused_upon_creation=False
 ) as dag:
 
     t1 = BashOperator(
