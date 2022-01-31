@@ -194,7 +194,3 @@ Considering the access patterns and the structure of the data, a relational data
 
 ## Credits
 This repo is cloned from https://github.com/renatootescu/ETL-pipeline. Huge credits to Renato, this has given me a great headstart on how to set up Airflow with Docker.
-
-## TODO
-
-- describe how to save features in a database or data lake. describe what type of database, or data lake, you would use to store these features, how you would store the data and what design and architecture considerations you have to make this database / data lake scalable
