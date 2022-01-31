@@ -2,12 +2,13 @@
 
 <p align="center">
   <a href="#about">About</a> •
-  <a href="#scenario">Scenario</a> •
   <a href="#prerequisites">Prerequisites</a> •
   <a href="#set-up">Set-up</a> •
   <a href="#installation">Installation</a> •
   <a href="#airflow-interface">Airflow Interface</a> •
   <a href="#pipeline-design">Pipeline Design</a> •
+  <a href="#airflow-cli">Airflow CLI</a> •
+  <a href="#optional-paramters">Optional Parameters</a> •
   <a href="#shut-down-and-restart-airflow">Shut Down and Restart Airflow</a> •
   <a href="#further-discussion">Further Discussion</a> •
   <a href="#credits">Credits</a>
@@ -30,7 +31,11 @@ The project is built in Python and it has 2 main parts:
 
 ## Set-up
 
-- Make sure Docker Desktop is running.
+- Make sure Docker Desktop is running, and at least 4GB of memory is allocated for the Docker Engine (ideally 8Gb). You can check and change the amount of memory in Resource. You can also check if you have enough memory by running this command:
+
+```
+docker run --rm "debian:buster-slim" bash -c 'numfmt --to iec $(echo $(($(getconf _PHYS_PAGES) * $(getconf PAGE_SIZE))))'
+```
 
 - Download / pull the repo to your desired location.
 
@@ -40,8 +45,10 @@ The project is built in Python and it has 2 main parts:
 ## Installation
 
 Start the installation with:
-
-    chmod 775 ./startup.sh && ./startup.sh (input_folder_here) (output_folder_here)
+```
+chmod +x ./startup.sh
+./startup.sh input_folder_here output_folder_here
+```
 
 This command updates the [startup.sh]() script with execute permission and execute the script. [startup.sh]() asks for two parameters, absolute path of the input folder and absolute path of the output folder. The output folder should be empty, and the input folder should be organized like this:
 
@@ -57,7 +64,7 @@ This command updates the [startup.sh]() script with execute permission and execu
 
     docker ps
 
-**Note**: it might take up to 30 seconds for the containers to have the **healthy** flag after starting.
+**Note**: it might take up to two to three minutes for the containers to have the **healthy** flag after starting.
 
 <p align="center"><img src="img/docker-output.png"></p>
 
@@ -129,17 +136,61 @@ This task gets two parameters, which is an input folder and an output folder. It
 
 Clean up task to remove all the content in the temp folder.
 
+## Airflow CLI
+
+Instead of Airflow UI, DAG run can be triggered from the CLI by running the command below.
+
+```
+chmod +x ./airflow.sh
+./airflow.sh dags trigger transform_gtzan_data  
+```
+
+When triggering a DAG from the CLI, the REST API or the UI, it is possible to pass configuration for a DAG Run as a JSON blob.
+
+```
+./airflow.sh dags trigger --conf '{"n_mels": 128, "n_mfcc": 20}' transform_gtzan_data
+```
+
+## Optional Parameters
+
+The list of parameters supported are listed below, and can also be found in the [config.yaml](./config.yaml) file:
+
+|Parameter's name|Default value|Location where parameter is applied|Documentation for parameter|
+|---|---|---|---|
+|n_mels|   128|   Melspectrogram feature extraction|[librosa.feature.melspectrogram](https://librosa.org/doc/main/generated/librosa.feature.melspectrogram.html)|
+|n_mfcc|   20|   MFCC feature extraction|[librosa.feature.mfcc](https://librosa.org/doc/main/generated/librosa.feature.mfcc.html#)|
+|n_fft|   2048|   Melspectrogram feature extraction|[librosa.feature.melspectrogram](https://librosa.org/doc/main/generated/librosa.feature.melspectrogram.html)|
+|hop_length|   512|   Melspectrogram feature extraction|[librosa.feature.melspectrogram](https://librosa.org/doc/main/generated/librosa.feature.melspectrogram.html)|
+|win_length|   n_fft|   Melspectrogram feature extraction|[librosa.feature.melspectrogram](https://librosa.org/doc/main/generated/librosa.feature.melspectrogram.html)|
+|dct_type|   2|   MFCC feature extraction|[librosa.feature.mfcc](https://librosa.org/doc/main/generated/librosa.feature.mfcc.html#)|
+
+The optional parameters are configured on the Airflow UI for each DAG run using the Configuration JSON or using a JSON blob in the CLI:
+
+<p align="center"><img src="img/optional-param.png"></p>
+
 ## Shut Down and Restart Airflow
 
-If you want to make changes to any of the configuration files [docker-compose.yml](https://github.com/renatootescu/ETL-pipeline/blob/main/docker-compose.yml), [Dockerfile](https://github.com/renatootescu/ETL-pipeline/blob/main/Dockerfile), [requirements.txt](https://github.com/renatootescu/ETL-pipeline/blob/main/requirements.txt) you will have to shut down the Airflow instance with:
-
-    chmod 775 ./cleanup.sh && ./cleanup.sh
-    
 This command will shut down, delete any containers created/used by Airflow, and delete the Docker's bind mount volumes. **Note**: The local directories binded to these volumes are not deleted by this action. 
-
+```
+chmod +x ./cleanup.sh 
+./cleanup.sh
+```
+    
 ## Further Discussion
 
-During the implementation of this pipeline, Airflow was used to be a processing framework, using Python operators. However, a better option for scalability is to offload the processing duty to a framework like Apache Spark, and use Airflow only to orchestrate the jobs.
+### Performance discussion
+
+During the implementation of this pipeline, Airflow was used both as an orchestrator and a processing framework, using Python operators. However, a better option for scalability is to offload the processing duty to a framework like Apache Spark, and use Airflow only to orchestrate the jobs.
+
+### Database discussion
+Considering the access patterns and the structure of the data, a relational database might not fit the bill, since the shape of the data is not static, as optional configuration might change the data's shape and size. The closest solution that can store the data in a directory-like manner in the current requirement is using a bucket solution, for example AWS's S3 bucket. The scalability of this solution requires some thought regarding the access patterns of the data:
+- Workloads with less than 50-100 total requests per second don't require any special effort. Customers that routinely perform thousands of requests per second need a plan.
+- Automated systems scale S3 horizontally by continuously splitting data into partitions based on high request rates and the number of keys in a partition (which leads to slow lookups)
+- Avoid hot spots. Like most sharding schemes, you want to avoid hot spots by the smart selection of key names. S3 objects are stored in buckets.  Each object is identified using a key. Keys are kept in sorted order. Keys in S3 are partitioned by prefix. Objects that sort together are stored together, so you want to select key names that will spread load around rather than all hash to the same partition.
+    - Creating keys based on a incrementally increasing numbers or date-time constructs, as is common when creating IDs, is bad for S3 scaling: 
+        - All new content is put in a single partition.
+        - Partitions storing older content are wasting their potential IOPS because the data they contain is probably colder.
+
 
 ## Credits
 This repo is cloned from https://github.com/renatootescu/ETL-pipeline. Huge credits to Renato, this has given me a great headstart on how to set up Airflow with Docker.
@@ -147,8 +198,3 @@ This repo is cloned from https://github.com/renatootescu/ETL-pipeline. Huge cred
 ## TODO
 
 - describe how to save features in a database or data lake. describe what type of database, or data lake, you would use to store these features, how you would store the data and what design and architecture considerations you have to make this database / data lake scalable
-
-- The extractor and normalization parameters as well as input and output paths should be configurable (e.g., window size, hop length, num frequency bands, num mfccs, ...).
-The yaml config file should provide details regarding two aspects of the pipeline (see Entry Point section below):
-    - Which feature extractor / normalizer to use
-    - Values to use for the parameters of each component of the pipeline (e.g., save folder for data saver, dataset folder for data loading, number of bands (Mels) for (Mel-)Spectrogram extractor)
